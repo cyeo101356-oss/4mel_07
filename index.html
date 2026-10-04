@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111827">
+<title>합창 성부 피아노 연습기</title>
+<style>
+:root{--bg:#f5f7fb;--card:#fff;--ink:#111827;--muted:#6b7280;--line:#e5e7eb;--accent:#2563eb;--accent2:#1d4ed8;--soft:#eff6ff;--danger:#dc2626;--ok:#059669}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans KR",sans-serif}
+button,input{font:inherit}
+header{background:#111827;color:#fff;padding:20px 18px}
+.header-inner{max-width:1180px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.brand{font-size:22px;font-weight:800}.sub{font-size:13px;color:#cbd5e1;margin-top:4px}
+main{max-width:1180px;margin:20px auto;padding:0 16px;display:grid;grid-template-columns:380px 1fr;gap:18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 5px 20px rgba(15,23,42,.05)}
+.card h2{font-size:17px;margin:0 0 13px}
+.drop{border:2px dashed #cbd5e1;border-radius:16px;padding:25px 16px;text-align:center;background:#fafafa;cursor:pointer}
+.drop.drag{border-color:var(--accent);background:var(--soft)}
+.drop strong{display:block;font-size:16px;margin-bottom:6px}
+.drop small{color:var(--muted);line-height:1.6}
+input[type=file]{display:none}
+.btn{border:0;border-radius:11px;padding:10px 14px;cursor:pointer;font-weight:700}
+.primary{background:var(--accent);color:white}.primary:hover{background:var(--accent2)}
+.secondary{background:#eef2f7;color:#1f2937}.danger{background:#fee2e2;color:#991b1b}
+.full{width:100%}
+.status{margin-top:12px;padding:11px 12px;border-radius:11px;background:#f3f4f6;color:#4b5563;font-size:13px;line-height:1.5}
+.status.ok{background:#ecfdf5;color:#047857}.status.warn{background:#fff7ed;color:#9a3412}
+.mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.mode{padding:11px;border:1px solid var(--line);border-radius:12px;background:#fff;text-align:left;cursor:pointer}
+.mode.active{border-color:var(--accent);background:var(--soft);box-shadow:0 0 0 2px rgba(37,99,235,.08)}
+.mode b{display:block;font-size:13px}.mode span{display:block;font-size:11px;color:var(--muted);margin-top:3px}
+.check{display:flex;align-items:center;gap:9px;margin:14px 0;color:#374151;font-size:14px}
+.controls{display:flex;gap:9px;margin-top:13px}.controls .btn{flex:1}
+input[type=range]{width:100%}
+.preview{min-height:520px;display:flex;align-items:center;justify-content:center;background:#f8fafc;border-radius:14px;overflow:auto;border:1px solid var(--line);position:relative}
+.preview img{max-width:100%;height:auto;display:block}.preview iframe{width:100%;height:650px;border:0}
+.placeholder{text-align:center;color:#9ca3af;padding:50px}
+.placeholder .big{font-size:46px;margin-bottom:10px}
+.parts{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}
+.part{padding:12px;border:1px solid var(--line);border-radius:12px}
+.part .name{font-weight:800}.part .count{font-size:12px;color:var(--muted);margin-top:3px}
+.progress{height:8px;background:#e5e7eb;border-radius:99px;overflow:hidden;margin-top:12px}.bar{height:100%;width:0;background:var(--accent);transition:.2s}
+.note-list{max-height:190px;overflow:auto;font-family:ui-monospace,monospace;font-size:12px;background:#0f172a;color:#e2e8f0;padding:12px;border-radius:12px;margin-top:12px;white-space:pre-wrap}
+footer{text-align:center;color:#9ca3af;font-size:12px;padding:25px}
+.hidden{display:none}
+@media(max-width:900px){main{grid-template-columns:1fr}.preview{min-height:360px}.parts{grid-template-columns:1fr 1fr}}
+@media(max-width:520px){main{padding:0 10px;margin-top:10px}.card{padding:14px;border-radius:15px}.mode-grid{grid-template-columns:1fr}.parts{grid-template-columns:1fr 1fr}.header-inner{display:block}}
+</style>
+</head>
+<body>
+<header><div class="header-inner"><div><div class="brand">🎼 합창 성부 피아노 연습기</div><div class="sub">소프라노 · 알토 · 테너 · 베이스 실제 음표 재생</div></div></div></header>
+
+<main>
+<section>
+<div class="card">
+<h2>① 악보 파일 넣기</h2>
+<label class="drop" id="drop">
+<strong>📂 PDF / JPG / PNG / MusicXML / MIDI</strong>
+<small>휴대폰은 이 영역을 눌러 파일을 선택하세요.<br>PC에서는 파일을 끌어다 놓아도 됩니다.</small>
+<input id="file" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,.xml,.musicxml,.mxl,.mid,.midi,application/pdf,image/*,audio/midi">
+</label>
+<div id="status" class="status">파일을 선택하면 자동으로 형식을 확인합니다.</div>
+<div class="progress"><div class="bar" id="bar"></div></div>
+</div>
+
+<div class="card">
+<h2>② 듣고 싶은 성부</h2>
+<div class="mode-grid">
+<button class="mode active" data-mode="all"><b>1. 모든 화음 피아노</b><span>4성부 동시 재생</span></button>
+<button class="mode" data-mode="s"><b>2. 소프라노 피아노</b><span>멜로디 그대로</span></button>
+<button class="mode" data-mode="a"><b>3. 알토 피아노</b><span>멜로디 그대로</span></button>
+<button class="mode" data-mode="t"><b>4. 테너 피아노</b><span>멜로디 그대로</span></button>
+<button class="mode" data-mode="b"><b>5. 베이스 피아노</b><span>멜로디 그대로</span></button>
+<button class="mode" data-mode="acc"><b>6. 악보상 반주</b><span>가능한 반주 트랙 재생</span></button>
+</div>
+<label class="check"><input id="bg" type="checkbox"> 다른 성부 백그라운드로 함께 듣기</label>
+<div class="controls"><button class="btn primary" id="play">▶ 재생</button><button class="btn secondary" id="stop">■ 정지</button></div>
+<label style="display:block;margin-top:13px;font-size:13px">재생 속도 <b id="tempoText">100%</b></label>
+<input id="tempo" type="range" min="50" max="150" value="100">
+</div>
+
+<div class="card">
+<h2>③ 판독된 성부</h2>
+<div class="parts">
+<div class="part"><div class="name">소프라노</div><div class="count" id="cs">0음</div></div>
+<div class="part"><div class="name">알토</div><div class="count" id="ca">0음</div></div>
+<div class="part"><div class="name">테너</div><div class="count" id="ct">0음</div></div>
+<div class="part"><div class="name">베이스</div><div class="count" id="cb">0음</div></div>
+</div>
+<div class="note-list" id="notes">아직 판독된 음표가 없습니다.</div>
+</div>
+</section>
+
+<section>
+<div class="card">
+<h2>악보 미리보기</h2>
+<div class="preview" id="preview"><div class="placeholder"><div class="big">🎵</div>악보 PDF 또는 이미지를 선택하세요.</div></div>
+</div>
+</section>
+</main>
+
+<footer>합창 성부 피아노 연습기 · Y,SG</footer>
+
+<script>
+const $=s=>document.querySelector(s);
+const file=$('#file'),drop=$('#drop'),status=$('#status'),bar=$('#bar'),preview=$('#preview');
+const bg=$('#bg'),tempo=$('#tempo'),tempoText=$('#tempoText');
+let score={s:[],a:[],t:[],b:[]}, mode='all', audioCtx=null, timers=[];
+
+function setStatus(t,type=''){status.textContent=t;status.className='status '+type}
+function setProgress(v){bar.style.width=Math.max(0,Math.min(100,v))+'%'}
+function clearTimers(){timers.forEach(clearTimeout);timers=[]}
+function midiFreq(n){return 440*Math.pow(2,(n-69)/12)}
+function playTone(ctx,midi,when,dur,vol=0.18){
+  const o=ctx.createOscillator(), g=ctx.createGain();
+  o.type='triangle';o.frequency.value=midiFreq(midi);
+  g.gain.setValueAtTime(0.0001,when);
+  g.gain.exponentialRampToValueAtTime(Math.max(.001,vol),when+.012);
+  g.gain.exponentialRampToValueAtTime(.0001,Math.max(when+.025,when+dur-.035));
+  o.connect(g);g.connect(ctx.destination);o.start(when);o.stop(when+dur);
+}
+function resetScore(){score={s:[],a:[],t:[],b:[]};updateCounts();$('#notes').textContent='아직 판독된 음표가 없습니다.'}
+function updateCounts(){
+  $('#cs').textContent=score.s.length+'음';$('#ca').textContent=score.a.length+'음';
+  $('#ct').textContent=score.t.length+'음';$('#cb').textContent=score.b.length+'음';
+}
+function normalizePart(name,i){
+  const n=(name||'').toLowerCase();
+  if(/soprano|소프라노|sop/.test(n))return's';
+  if(/alto|알토|alt/.test(n))return'a';
+  if(/tenor|테너|ten/.test(n))return't';
+  if(/bass|베이스|baritone|bas/.test(n))return'b';
+  return['s','a','t','b'][i]||'s';
+}
+function stepMidi(step,oct,alter=0){
+  const base={C:0,D:2,E:4,F:5,G:7,A:9,B:11};
+  return (oct+1)*12+base[step]+alter;
+}
+function parseMusicXML(text){
+  const xml=new DOMParser().parseFromString(text,'application/xml');
+  if(xml.querySelector('parsererror'))throw Error('MusicXML을 읽을 수 없습니다.');
+  resetScore();
+  const parts=[...xml.getElementsByTagName('part')];
+  if(!parts.length)throw Error('성부(part)를 찾지 못했습니다.');
+  parts.forEach((p,idx)=>{
+    const id=p.getAttribute('id')||'';
+    const pi=[...xml.getElementsByTagName('score-part')].find(x=>x.getAttribute('id')===id);
+    const name=pi?.getElementsByTagName('part-name')[0]?.textContent||'';
+    const key=normalizePart(name,idx), out=score[key];
+    let divisions=1, cursor=0;
+    [...p.getElementsByTagName('measure')].forEach(measure=>{
+      const attr=measure.getElementsByTagName('attributes')[0];
+      if(attr?.getElementsByTagName('divisions')[0]) divisions=Number(attr.getElementsByTagName('divisions')[0].textContent)||1;
+      [...measure.children].filter(x=>x.tagName==='note').forEach(note=>{
+        const dur=(Number(note.getElementsByTagName('duration')[0]?.textContent)||1)/divisions;
+        const isChord=!!note.getElementsByTagName('chord').length;
+        const rest=!!note.getElementsByTagName('rest').length;
+        if(!isChord)cursor=cursor;
+        if(!rest){
+          const pitch=note.getElementsByTagName('pitch')[0];
+          if(pitch){
+            const midi=stepMidi(pitch.getElementsByTagName('step')[0].textContent,
+              Number(pitch.getElementsByTagName('octave')[0].textContent),
+              Number(pitch.getElementsByTagName('alter')[0]?.textContent||0));
+            out.push({midi,start:cursor,dur});
+          }
+        }
+        if(!isChord)cursor+=dur;
+      });
+    });
+  });
+  if(!score.s.length&&!score.a.length&&!score.t.length&&!score.b.length)throw Error('음표를 찾지 못했습니다.');
+  updateCounts(); renderNotes(); setProgress(100);
+  setStatus('MusicXML 판독 완료. 실제 음높이와 음가를 기준으로 재생할 수 있습니다.','ok');
+}
+function vlq(data,pos){
+  let v=0,b;
+  do{b=data[pos++];v=(v<<7)|(b&127)}while(b&128);
+  return [v,pos]
+}
+function parseMIDI(buf){
+  resetScore();const d=new Uint8Array(buf);let p=0;
+  const str=n=>String.fromCharCode(...d.slice(p,p+n));
+  if(str(4)!=='MThd')throw Error('MIDI 파일이 아닙니다.');
+  const len=(d[p]<<24)|(d[p+1]<<16)|(d[p+2]<<8)|d[p+3];p+=4;
+  const fmt=(d[p]<<8)|d[p+1], tracks=(d[p+2]<<8)|d[p+3], div=(d[p+4]<<8)|d[p+5];p=8+len;
+  let trackNo=0;
+  for(let tr=0;tr<tracks;tr++){
+    if(String.fromCharCode(...d.slice(p,p+4))!=='MTrk')break;
+    const L=(d[p+4]<<24)|(d[p+5]<<16)|(d[p+6]<<8)|d[p+7];p+=8;
+    const end=p+L;let tick=0,last=0;const active={};let notes=[];
+    while(p<end){
+      let q;[q,p]=vlq(d,p);tick+=q;let status=d[p];
+      if(status<128)status=last;else p++;last=status;
+      if(status===0xff){const type=d[p++];let z;[z,p]=vlq(d,p);p+=z;continue}
+      const ch=status&15, cmd=status&240;
+      if(cmd===0x90||cmd===0x80){
+        const note=d[p++],vel=d[p++];
+        if(cmd===0x90&&vel){active[note]=tick}
+        else if(active[note]!=null){notes.push({midi:note,start:active[note]/div,dur:(tick-active[note])/div});delete active[note]}
+      }else if(cmd===0xc0||cmd===0xd0)p++;
+      else p+=2;
+    }
+    if(notes.length)score[['s','a','t','b'][trackNo]||'s']=notes;
+    trackNo++;p=end;
+  }
+  updateCounts();renderNotes();
+  setStatus('MIDI 판독 완료. 트랙 순서에 따라 S/A/T/B로 배치했습니다.','ok');setProgress(100);
+}
+function renderNotes(){
+  let out=[];
+  for(const k of ['s','a','t','b']){
+    out.push(k.toUpperCase()+': '+score[k].slice(0,35).map(n=>midiName(n.midi)).join(' ') +(score[k].length>35?' …':''));
+  }
+  $('#notes').textContent=out.join('\\n');
+}
+function midiName(m){const names=['도','도#','레','레#','미','파','파#','솔','솔#','라','라#','시'];return names[m%12]+(Math.floor(m/12)-1)}
+
+async function handle(f){
+  if(!f)return;resetScore();setProgress(5);
+  const ext=f.name.toLowerCase().split('.').pop();
+  if(['xml','musicxml'].includes(ext)){
+    parseMusicXML(await f.text()); return;
+  }
+  if(['mid','midi'].includes(ext)){
+    parseMIDI(await f.arrayBuffer()); return;
+  }
+  if(['jpg','jpeg','png','webp'].includes(ext)){
+    preview.innerHTML='<img alt="악보 미리보기">';
+    preview.querySelector('img').src=URL.createObjectURL(f);
+    setProgress(15);
+    setStatus('이미지는 정상적으로 불러왔습니다. 다만 현재 이 단일 index.html에는 실제 OMR 신경망 엔진이 포함되어 있지 않아, 이미지를 음표 데이터로 자동 변환하는 단계는 별도 엔진이 필요합니다.','warn');
+    return;
+  }
+  if(ext==='pdf'){
+    preview.innerHTML='<iframe title="PDF 악보 미리보기"></iframe>';
+    preview.querySelector('iframe').src=URL.createObjectURL(f);
+    setProgress(15);
+    setStatus('PDF는 정상적으로 불러왔습니다. PDF의 음표를 S/A/T/B 실제 음표 데이터로 자동 변환하려면 OMR 엔진이 필요합니다.','warn');
+    return;
+  }
+  setStatus('지원하지 않는 파일 형식입니다.','warn');
+}
+file.addEventListener('change',e=>handle(e.target.files[0]));
+['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('drag')}));
+['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('drag')}));
+drop.addEventListener('drop',e=>handle(e.dataTransfer.files[0]));
+
+document.querySelectorAll('.mode').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.mode').forEach(x=>x.classList.remove('active'));b.classList.add('active');mode=b.dataset.mode;
+}));
+tempo.addEventListener('input',()=>tempoText.textContent=tempo.value+'%');
+
+function selectedParts(){
+  if(mode==='s')return ['s'];if(mode==='a')return ['a'];if(mode==='t')return ['t'];if(mode==='b')return ['b'];
+  if(mode==='acc')return ['s','a','t','b'];
+  return ['s','a','t','b'];
+}
+$('#play').addEventListener('click',async()=>{
+  clearTimers();
+  if(!score.s.length&&!score.a.length&&!score.t.length&&!score.b.length){
+    setStatus('먼저 MusicXML 또는 MIDI 파일을 넣어 실제 음표 데이터를 만들어 주세요. PDF/JPG는 현재 파일 안에서 미리보기만 가능합니다.','warn');return;
+  }
+  audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();await audioCtx.resume();
+  const parts=selectedParts(), now=audioCtx.currentTime+.08, rate=Number(tempo.value)/100;
+  let maxEnd=0;
+  parts.forEach(k=>{
+    if(!score[k].length)return;
+    const volume=mode===k?.20:.15;
+    const notes=score[k];
+    notes.forEach(n=>{
+      const start=now+n.start*0.5/rate,dur=Math.max(.04,n.dur*.5/rate);
+      playTone(audioCtx,n.midi,start,dur,volume);maxEnd=Math.max(maxEnd,n.start+n.dur);
+    });
+  });
+  if(bg.checked&&mode!=='all'){
+    ['s','a','t','b'].filter(k=>k!==mode).forEach(k=>score[k].forEach(n=>{
+      const start=now+n.start*.5/rate,dur=Math.max(.04,n.dur*.5/rate);
+      playTone(audioCtx,n.midi,start,dur,.045);
+    }));
+  }
+  setStatus('재생 중입니다. 선택한 성부의 실제 음높이와 음가를 피아노 음색으로 재생합니다.','ok');
+  timers.push(setTimeout(()=>setStatus('재생이 끝났습니다.','ok'),maxEnd*500/rate+300));
+});
+$('#stop').addEventListener('click',()=>{
+  clearTimers();if(audioCtx)audioCtx.close().catch(()=>{});audioCtx=null;setStatus('재생을 정지했습니다.');
+});
+</script>
+</body>
+</html>
